@@ -9,19 +9,28 @@
 <body>
   <main class="hero">
     <div class="card inbox-card">
-      <h2 class="send-title">Your inbox</h2>
+      <div class="inbox-head">
+        <h2 class="send-title">Your inbox</h2>
+        <span id="unread-badge" class="unread-badge hidden"></span>
+      </div>
       <p class="tagline">Paste your admin key to view messages.</p>
 
       <form id="inbox-form" class="create-form">
-        <input id="admin-key" name="key" type="text" placeholder="admin key" autocomplete="off" required>
+        <input id="admin-key" name="key" type="password" placeholder="admin key" autocomplete="off" required>
         <button type="submit" class="btn-gradient">View messages</button>
       </form>
       <p id="inbox-error" class="error hidden"></p>
+
+      <div id="notification-banner" class="notification-banner hidden">
+        <span class="notification-text"></span>
+        <button id="dismiss-banner" class="btn-ghost" type="button">Dismiss</button>
+      </div>
 
       <div id="messages" class="messages hidden"></div>
 
       <div class="inbox-links hidden" id="inbox-links">
         <a class="btn-ghost link-btn" href="/profile">Edit my profile</a>
+        <a class="btn-ghost link-btn" href="/" id="logout-link">Log out</a>
       </div>
     </div>
   </main>

@@ -10,13 +10,23 @@
   <main class="hero">
     <div class="card">
       <h1 class="logo">confess<span>.</span></h1>
-      <p class="tagline">Get anonymous messages & confessions. No signup.</p>
+      <p class="tagline">Get anonymous messages & confessions. Create a free account.</p>
 
       <form id="create-form" class="create-form">
-        <input id="username" name="username" type="text" placeholder="your username" autocomplete="off" maxlength="20" required>
-        <button type="submit" class="btn-gradient">Create my link</button>
+        <label class="field-label" for="username">Username</label>
+        <input id="username" name="username" type="text" placeholder="your username" autocomplete="username" maxlength="20" required>
+
+        <label class="field-label" for="email">Email</label>
+        <input id="email" name="email" type="email" placeholder="you@example.com" autocomplete="email" required>
+
+        <label class="field-label" for="password">Password</label>
+        <input id="password" name="password" type="password" placeholder="min 8 characters" autocomplete="new-password" minlength="8" required>
+
+        <button type="submit" class="btn-gradient">Create my account</button>
       </form>
       <p id="create-error" class="error hidden"></p>
+
+      <p class="switch-link">Already have an account? <a href="/login">Log in</a></p>
 
       <div id="result" class="result hidden">
         <p>Share this link. Anyone can send you a message:</p>

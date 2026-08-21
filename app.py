@@ -9,12 +9,14 @@ from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from supabase import create_client
 from werkzeug.middleware.proxy_fix import ProxyFix
+from werkzeug.security import check_password_hash, generate_password_hash
 
 load_dotenv()
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
 SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY", "")
 USERNAME_RE = re.compile(r"^[a-zA-Z0-9_]{3,20}$")
+EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 MAX_BODY_LEN = 500
 MAX_CONTENT_LENGTH = 64 * 1024
 
@@ -22,6 +24,7 @@ RATE_LIMIT_WINDOW = 3600
 MESSAGE_LIMIT_PER_IP = 5
 CREATE_LIMIT_PER_IP = 10
 INBOX_ATTEMPT_LIMIT_PER_IP = 20
+LOGIN_LIMIT_PER_IP = 20
 
 app = Flask(__name__, static_folder="public", static_url_path="")
 app.config["MAX_CONTENT_LENGTH"] = MAX_CONTENT_LENGTH
@@ -112,6 +115,11 @@ def profile_page():
     return send_from_directory(app.static_folder, "profile.html")
 
 
+@app.route("/login")
+def login_page():
+    return send_from_directory(app.static_folder, "login.html")
+
+
 @app.route("/api/users", methods=["POST"])
 def create_user():
     if not require_json():
@@ -122,21 +130,75 @@ def create_user():
 
     data = request.get_json(silent=True) or {}
     username = (data.get("username") or "").strip()
+    email = (data.get("email") or "").strip().lower()
+    password = data.get("password") or ""
+
     if not USERNAME_RE.match(username):
         return jsonify({"error": "Username must be 3-20 chars (letters, numbers, underscore)."}), 400
 
+    if email and not EMAIL_RE.match(email):
+        return jsonify({"error": "Enter a valid email address."}), 400
+
+    if email and len(password) < 8:
+        return jsonify({"error": "Password must be at least 8 characters."}), 400
+
     db = get_db()
-    existing = db.table("users").select("username").eq("username", username).execute()
+    existing = db.table("users").select("username, email").eq("username", username).execute()
     if existing.data:
         return jsonify({"error": "That username is already taken."}), 409
 
+    if email:
+        email_match = db.table("users").select("email").eq("email", email).execute()
+        if email_match.data:
+            return jsonify({"error": "That email is already registered."}), 409
+
     admin_key = hashlib.sha256(os.urandom(32)).hexdigest()
-    db.table("users").insert(
-        {"username": username, "admin_key": admin_key}
-    ).execute()
+    record = {"username": username, "admin_key": admin_key}
+    if email:
+        record["email"] = email
+        record["password_hash"] = generate_password_hash(password)
+    db.table("users").insert(record).execute()
 
     link = f"{request.host_url.rstrip('/')}/u/{username}"
-    return jsonify({"username": username, "link": link, "adminKey": admin_key}), 201
+    return jsonify({
+        "username": username,
+        "link": link,
+        "adminKey": admin_key,
+        "email": email,
+    }), 201
+
+
+@app.route("/api/login", methods=["POST"])
+def login():
+    if not require_json():
+        return jsonify({"error": "Content-Type must be application/json."}), 415
+
+    if rate_limited(f"login:{client_ip()}", LOGIN_LIMIT_PER_IP):
+        return jsonify({"error": "Too many login attempts. Try again later."}), 429
+
+    data = request.get_json(silent=True) or {}
+    email = (data.get("email") or "").strip().lower()
+    password = data.get("password") or ""
+
+    if not email or not password:
+        return jsonify({"error": "Email and password are required."}), 400
+
+    db = get_db()
+    res = db.table("users").select("username, email, password_hash, admin_key").eq("email", email).execute()
+    if not res.data:
+        return jsonify({"error": "Invalid email or password."}), 401
+
+    row = res.data[0]
+    if not row.get("password_hash") or not check_password_hash(row["password_hash"], password):
+        return jsonify({"error": "Invalid email or password."}), 401
+
+    link = f"{request.host_url.rstrip('/')}/u/{row['username']}"
+    return jsonify({
+        "username": row["username"],
+        "link": link,
+        "adminKey": row["admin_key"],
+        "email": row["email"],
+    }), 200
 
 
 @app.route("/api/users/<username>", methods=["GET"])
@@ -167,7 +229,7 @@ def get_me():
     if not key:
         return jsonify({"error": "Missing admin key."}), 401
     db = get_db()
-    res = db.table("users").select("username, display_name, avatar_url, bio").eq("admin_key", key).execute()
+    res = db.table("users").select("username, display_name, avatar_url, bio, email").eq("admin_key", key).execute()
     if not res.data:
         return jsonify({"error": "Invalid key."}), 403
     row = res.data[0]
@@ -176,6 +238,7 @@ def get_me():
         "displayName": row.get("display_name") or "",
         "avatarUrl": row.get("avatar_url") or "",
         "bio": row.get("bio") or "",
+        "email": row.get("email") or "",
     })
 
 
@@ -251,8 +314,45 @@ def get_messages():
         return jsonify({"error": "Invalid key."}), 403
 
     username = user.data[0]["username"]
-    res = db.table("messages").select("id, body, created_at").eq("username", username).order("created_at", desc=True).execute()
-    return jsonify({"username": username, "messages": res.data})
+    res = db.table("messages").select("id, body, created_at, is_read").eq("username", username).order("created_at", desc=True).execute()
+    unread_res = db.table("messages").select("id").eq("username", username).eq("is_read", False).execute()
+    return jsonify({
+        "username": username,
+        "messages": res.data,
+        "unread": len(unread_res.data),
+    })
+
+
+@app.route("/api/messages/read", methods=["POST"])
+def mark_messages_read():
+    key = request.headers.get("X-Admin-Key", "")
+    if not key:
+        return jsonify({"error": "Missing admin key."}), 401
+
+    db = get_db()
+    user = db.table("users").select("username").eq("admin_key", key).execute()
+    if not user.data:
+        return jsonify({"error": "Invalid key."}), 403
+
+    username = user.data[0]["username"]
+    db.table("messages").update({"is_read": True}).eq("username", username).eq("is_read", False).execute()
+    return jsonify({"ok": True})
+
+
+@app.route("/api/notifications", methods=["GET"])
+def get_notifications():
+    key = request.headers.get("X-Admin-Key", "")
+    if not key:
+        return jsonify({"error": "Missing admin key."}), 401
+
+    db = get_db()
+    user = db.table("users").select("username").eq("admin_key", key).execute()
+    if not user.data:
+        return jsonify({"error": "Invalid key."}), 403
+
+    username = user.data[0]["username"]
+    unread_res = db.table("messages").select("id").eq("username", username).eq("is_read", False).execute()
+    return jsonify({"unread": len(unread_res.data)})
 
 
 @app.route("/api/messages/<message_id>", methods=["DELETE"])

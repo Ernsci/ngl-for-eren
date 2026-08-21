@@ -36,7 +36,7 @@ function showAvatar(img, letterEl, letter) {
   setLetter(letterEl, letter);
 }
 
-/* ---------- landing: create link ---------- */
+/* ---------- landing: create account ---------- */
 const createForm = $("#create-form");
 if (createForm) {
   createForm.addEventListener("submit", async (e) => {
@@ -44,6 +44,8 @@ if (createForm) {
     const errorEl = $("#create-error");
     const btn = createForm.querySelector("button");
     const username = $("#username").value.trim();
+    const email = $("#email").value.trim();
+    const password = $("#password").value;
     hide(errorEl);
     btn.disabled = true;
     btn.textContent = "Creating...";
@@ -51,7 +53,7 @@ if (createForm) {
       const data = await api("/api/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username }),
+        body: JSON.stringify({ username, email, password }),
       });
       sessionStorage.setItem("adminKey", data.adminKey);
       $("#link").value = data.link;
@@ -64,7 +66,7 @@ if (createForm) {
       show(errorEl);
     } finally {
       btn.disabled = false;
-      btn.textContent = "Create my link";
+      btn.textContent = "Create my account";
     }
   });
 
@@ -77,6 +79,36 @@ if (createForm) {
     } catch (e) {
       input.select();
       document.execCommand("copy");
+    }
+  });
+}
+
+/* ---------- login page ---------- */
+const loginForm = $("#login-form");
+if (loginForm) {
+  loginForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const errorEl = $("#login-error");
+    const btn = loginForm.querySelector("button");
+    const email = $("#email").value.trim();
+    const password = $("#password").value;
+    hide(errorEl);
+    btn.disabled = true;
+    btn.textContent = "Logging in...";
+    try {
+      const data = await api("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      sessionStorage.setItem("adminKey", data.adminKey);
+      window.location.href = "/inbox";
+    } catch (err) {
+      errorEl.textContent = err.message;
+      show(errorEl);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Log in";
     }
   });
 }
@@ -148,41 +180,85 @@ if (sendForm) {
 const inboxForm = $("#inbox-form");
 if (inboxForm) {
   const messagesEl = $("#messages");
+  const badgeEl = $("#unread-badge");
+  const bannerEl = $("#notification-banner");
+  let lastUnread = 0;
+
+  function setBadge(n) {
+    if (n > 0) {
+      badgeEl.textContent = n;
+      show(badgeEl);
+    } else {
+      hide(badgeEl);
+    }
+  }
+
+  function showBanner(text) {
+    $("#notification-banner .notification-text").textContent = text;
+    show(bannerEl);
+  }
+
+  $("#dismiss-banner").addEventListener("click", () => hide(bannerEl));
+
+  async function pollNotifications(key) {
+    if (!key) return;
+    try {
+      const data = await api(`/api/notifications`, {
+        headers: { "X-Admin-Key": key },
+      });
+      setBadge(data.unread);
+      if (data.unread > lastUnread) {
+        showBanner(
+          `You received ${data.unread} new message${data.unread === 1 ? "" : "s"}!`
+        );
+        lastUnread = data.unread;
+      }
+    } catch (e) {}
+  }
 
   async function load(key) {
     hide($("#inbox-error"));
     const data = await api(`/api/messages`, {
       headers: { "X-Admin-Key": key },
     });
+    lastUnread = data.unread || 0;
+    setBadge(lastUnread);
     messagesEl.innerHTML = "";
     show(messagesEl);
     show($("#inbox-links"));
     if (!data.messages.length) {
       messagesEl.innerHTML = '<p class="empty">No messages yet.</p>';
-      return;
-    }
-    for (const m of data.messages) {
-      const wrap = document.createElement("div");
-      wrap.className = "msg";
-      const body = document.createElement("p");
-      body.textContent = m.body;
-      const time = document.createElement("time");
-      time.textContent = new Date(m.created_at).toLocaleString();
-      const del = document.createElement("button");
-      del.className = "del";
-      del.textContent = "Delete";
-      del.addEventListener("click", async () => {
-        await api(`/api/messages/${m.id}`, {
-          method: "DELETE",
-          headers: { "X-Admin-Key": key },
+    } else {
+      for (const m of data.messages) {
+        const wrap = document.createElement("div");
+        wrap.className = "msg" + (m.is_read ? "" : " msg-unread");
+        const body = document.createElement("p");
+        body.textContent = m.body;
+        const time = document.createElement("time");
+        time.textContent = new Date(m.created_at).toLocaleString();
+        const del = document.createElement("button");
+        del.className = "del";
+        del.textContent = "Delete";
+        del.addEventListener("click", async () => {
+          await api(`/api/messages/${m.id}`, {
+            method: "DELETE",
+            headers: { "X-Admin-Key": key },
+          });
+          wrap.remove();
+          if (!messagesEl.children.length) {
+            messagesEl.innerHTML = '<p class="empty">No messages yet.</p>';
+          }
         });
-        wrap.remove();
-        if (!messagesEl.children.length) {
-          messagesEl.innerHTML = '<p class="empty">No messages yet.</p>';
-        }
-      });
-      wrap.append(body, time, del);
-      messagesEl.appendChild(wrap);
+        wrap.append(body, time, del);
+        messagesEl.appendChild(wrap);
+      }
+      api(`/api/messages/read`, {
+        method: "POST",
+        headers: { "X-Admin-Key": key },
+      }).then(() => {
+        setBadge(0);
+        lastUnread = 0;
+      }).catch(() => {});
     }
   }
 
@@ -203,6 +279,7 @@ if (inboxForm) {
     try {
       await load(key);
       sessionStorage.setItem("adminKey", key);
+      setInterval(() => pollNotifications(key), 15000);
     } catch (err) {
       errorEl.textContent = err.message;
       show(errorEl);
@@ -210,6 +287,10 @@ if (inboxForm) {
       btn.disabled = false;
       btn.textContent = "View messages";
     }
+  });
+
+  $("#logout-link").addEventListener("click", () => {
+    sessionStorage.removeItem("adminKey");
   });
 }
 
@@ -250,6 +331,9 @@ if (profileForm) {
       $("#display-name").value = me.displayName || "";
       $("#avatar-url").value = me.avatarUrl || "";
       $("#bio").value = me.bio || "";
+      $("#account-email").textContent = me.email
+        ? `Logged in as ${me.email}`
+        : `Account: @${me.username}`;
       setLetter(avatarPlaceholder, me.displayName || me.username);
       updatePreview(me.avatarUrl);
     } catch (err) {
