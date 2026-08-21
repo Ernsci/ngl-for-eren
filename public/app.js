@@ -275,11 +275,7 @@ if (inboxForm) {
     }
   }
 
-  const saved = sessionStorage.getItem("adminKey");
-  if (saved) {
-    $("#admin-key").value = saved;
-    inboxForm.querySelector("button").click();
-  }
+  let pollTimer = null;
 
   inboxForm.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -292,7 +288,8 @@ if (inboxForm) {
     try {
       await load(key);
       sessionStorage.setItem("adminKey", key);
-      setInterval(() => pollNotifications(key), 15000);
+      if (pollTimer) clearInterval(pollTimer);
+      pollTimer = setInterval(() => pollNotifications(key), 15000);
     } catch (err) {
       errorEl.textContent = err.message;
       show(errorEl);
@@ -302,9 +299,22 @@ if (inboxForm) {
     }
   });
 
-  $("#logout-link").addEventListener("click", () => {
-    sessionStorage.removeItem("adminKey");
-  });
+  const saved = sessionStorage.getItem("adminKey");
+  if (saved) {
+    $("#admin-key").value = saved;
+    inboxForm.requestSubmit();
+  }
+
+  const logoutLink = $("#logout-link");
+  if (logoutLink) {
+    logoutLink.addEventListener("click", () => {
+      sessionStorage.removeItem("adminKey");
+      if (pollTimer) {
+        clearInterval(pollTimer);
+        pollTimer = null;
+      }
+    });
+  }
 }
 
 /* ---------- profile edit page ---------- */
