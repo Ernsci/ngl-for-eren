@@ -1,0 +1,19 @@
+{
+  "name": "erengngl",
+  "version": "1.0.0",
+  "description": "ERENNGL anonymous message app",
+  "private": true,
+  "scripts": {
+    "set-api": "node scripts/set-api.js",
+    "sync": "npm run set-api && npx cap sync android",
+    "open:android": "npx cap open android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.0",
+    "@capacitor/core": "^8.5.0",
+    "@capacitor/share": "^8.0.1"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.5.0"
+  }
+}

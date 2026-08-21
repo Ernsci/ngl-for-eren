@@ -6,6 +6,7 @@ import time
 
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request, send_from_directory
+from flask_cors import CORS
 from supabase import create_client
 from werkzeug.middleware.proxy_fix import ProxyFix
 
@@ -25,6 +26,7 @@ INBOX_ATTEMPT_LIMIT_PER_IP = 20
 app = Flask(__name__, static_folder="public", static_url_path="")
 app.config["MAX_CONTENT_LENGTH"] = MAX_CONTENT_LENGTH
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
+CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=False)
 
 _ratelimit = {}
 

@@ -1,5 +1,7 @@
 const $ = (sel) => document.querySelector(sel);
 
+const API_BASE = (window.API_BASE || "").replace(/\/+$/, "");
+
 function show(el) {
   el.classList.remove("hidden");
 }
@@ -9,7 +11,7 @@ function hide(el) {
 }
 
 async function api(url, options) {
-  const res = await fetch(url, options);
+  const res = await fetch(API_BASE + url, options);
   let data = {};
   try {
     data = await res.json();
@@ -53,6 +55,8 @@ if (createForm) {
       });
       sessionStorage.setItem("adminKey", data.adminKey);
       $("#link").value = data.link;
+      const openPage = $("#open-page");
+      openPage.href = `send.html?u=${encodeURIComponent(data.username)}`;
       show($("#result"));
       hide(createForm);
     } catch (err) {
@@ -80,7 +84,9 @@ if (createForm) {
 /* ---------- send page ---------- */
 const sendForm = $("#send-form");
 if (sendForm) {
-  const username = window.location.pathname.split("/").pop();
+  const params = new URLSearchParams(window.location.search);
+  const username =
+    params.get("u") || window.location.pathname.split("/").pop();
   const typing = $("#typing");
   const sent = $("#sent");
 

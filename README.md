@@ -1,16 +1,19 @@
-# confess — anonymous message links (NGL-style)
+# ERENNGL — anonymous message links (NGL-style)
 
 A small NGL-style app: create a username, share your link, and receive anonymous messages.
 You can customize your profile (display name, avatar, bio) that shows on your link page.
-Backend is Python (Flask + Supabase), frontend is plain HTML/CSS/JS.
+Backend is Python (Flask + Supabase), frontend is plain HTML/CSS/JS, and there is an
+Android app (Capacitor) built automatically with GitHub Actions.
 
 ## Project structure
 
 ```
-app.py            # Flask app (routes, rate limiting, Supabase client)
+app.py            # Flask app (routes, rate limiting, Supabase client, CORS)
 schema.sql        # run this in the Supabase SQL editor (idempotent)
 requirements.txt
-public/           # static frontend (index, send, inbox, profile, style, app)
+public/           # static frontend (index, send, inbox, profile, style, app, config)
+capacitor.config.ts / package.json / scripts/set-api.js   # Android app (Capacitor)
+.github/workflows/build-apk.yml   # builds the APK in CI
 ```
 
 ## Setup
@@ -57,6 +60,27 @@ Open http://localhost:5000, create a username, share the link, and check your in
    - `SUPABASE_URL`
    - `SUPABASE_SERVICE_KEY`
 6. Deploy. Open your `https://<service>.onrender.com` URL.
+
+## Android app (Capacitor + GitHub Actions)
+
+The app wraps the same `public/` frontend in a native Android WebView. It calls the
+deployed backend, so the API base URL is injected at build time.
+
+1. Add a GitHub **repository variable** named `API_BASE` with your Render URL
+   (e.g. `https://ngl-for-eren.onrender.com`).
+2. Push to `main` (or run the `build-apk` workflow manually from the Actions tab).
+3. Download the `erengngl-apk` artifact from the workflow run.
+4. Install the APK on your phone (allow "install unknown apps").
+
+Local build (optional):
+
+```bash
+npm install
+API_BASE=https://your-render-url npm run set-api
+npx cap add android
+npx cap sync android
+npx cap open android   # build in Android Studio
+```
 
 ## Notes
 
