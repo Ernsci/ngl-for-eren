@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>inbox — your messages</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <main class="hero">
+    <div class="card inbox-card">
+      <h2 class="send-title">Your inbox</h2>
+      <p class="tagline">Paste your admin key to view messages.</p>
+
+      <form id="inbox-form" class="create-form">
+        <input id="admin-key" name="key" type="text" placeholder="admin key" autocomplete="off" required>
+        <button type="submit" class="btn-gradient">View messages</button>
+      </form>
+      <p id="inbox-error" class="error hidden"></p>
+
+      <div id="messages" class="messages hidden"></div>
+    </div>
+  </main>
+  <script src="/app.js"></script>
+</body>
+</html>

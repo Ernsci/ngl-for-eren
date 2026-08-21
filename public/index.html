@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>confess — get anonymous messages</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <main class="hero">
+    <div class="card">
+      <h1 class="logo">confess<span>.</span></h1>
+      <p class="tagline">Get anonymous messages & confessions. No signup.</p>
+
+      <form id="create-form" class="create-form">
+        <input id="username" name="username" type="text" placeholder="your username" autocomplete="off" maxlength="20" required>
+        <button type="submit" class="btn-gradient">Create my link</button>
+      </form>
+      <p id="create-error" class="error hidden"></p>
+
+      <div id="result" class="result hidden">
+        <p>Share this link. Anyone can send you a message:</p>
+        <div class="link-row">
+          <input id="link" readonly>
+          <button id="copy-btn" class="btn-ghost" type="button">Copy</button>
+        </div>
+        <div class="link-row">
+          <a id="open-inbox" href="/inbox" class="btn-gradient">Open my inbox</a>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script src="/app.js"></script>
+</body>
+</html>

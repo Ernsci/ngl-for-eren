@@ -1,0 +1,221 @@
+import hashlib
+import hmac
+import os
+import re
+import time
+
+from dotenv import load_dotenv
+from flask import Flask, jsonify, request, send_from_directory
+from supabase import create_client
+from werkzeug.middleware.proxy_fix import ProxyFix
+
+load_dotenv()
+
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
+SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY", "")
+USERNAME_RE = re.compile(r"^[a-zA-Z0-9_]{3,20}$")
+MAX_BODY_LEN = 500
+MAX_CONTENT_LENGTH = 64 * 1024
+
+RATE_LIMIT_WINDOW = 3600
+MESSAGE_LIMIT_PER_IP = 5
+CREATE_LIMIT_PER_IP = 10
+INBOX_ATTEMPT_LIMIT_PER_IP = 20
+
+app = Flask(__name__, static_folder="public")
+app.config["MAX_CONTENT_LENGTH"] = MAX_CONTENT_LENGTH
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
+
+_ratelimit = {}
+
+if not SUPABASE_URL or not SUPABASE_SERVICE_KEY:
+    print("WARNING: SUPABASE_URL / SUPABASE_SERVICE_KEY not set. API calls will fail until configured.")
+
+
+def get_db():
+    if not SUPABASE_URL or not SUPABASE_SERVICE_KEY:
+        raise RuntimeError("Supabase is not configured. Set SUPABASE_URL and SUPABASE_SERVICE_KEY.")
+    return create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+
+
+def client_ip() -> str:
+    return request.remote_addr or "unknown"
+
+
+def rate_limited(key: str, limit: int, window: int = RATE_LIMIT_WINDOW) -> bool:
+    now = time.time()
+    if len(_ratelimit) > 10000:
+        for k in [k for k, (_, ts) in _ratelimit.items() if now - ts > RATE_LIMIT_WINDOW]:
+            _ratelimit.pop(k, None)
+    entry = _ratelimit.get(key)
+    if entry is None or now - entry[1] > window:
+        _ratelimit[key] = (1, now)
+        return False
+    count, start = entry
+    if count >= limit:
+        return True
+    _ratelimit[key] = (count + 1, start)
+    return False
+
+
+def secure_compare(a: str, b: str) -> bool:
+    return hmac.compare_digest(a.encode(), b.encode())
+
+
+def require_json() -> bool:
+    if request.mimetype != "application/json":
+        return False
+    return True
+
+
+@app.after_request
+def add_security_headers(resp):
+    resp.headers["X-Content-Type-Options"] = "nosniff"
+    resp.headers["X-Frame-Options"] = "DENY"
+    resp.headers["Referrer-Policy"] = "no-referrer"
+    resp.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
+    resp.headers["Content-Security-Policy"] = (
+        "default-src 'self'; "
+        "script-src 'self'; "
+        "style-src 'self'; "
+        "img-src 'self' data:; "
+        "font-src 'self'; "
+        "connect-src 'self'; "
+        "base-uri 'self'; "
+        "frame-ancestors 'none'; "
+        "form-action 'self'"
+    )
+    if request.is_secure:
+        resp.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    return resp
+
+
+@app.route("/")
+def index():
+    return send_from_directory(app.static_folder, "index.html")
+
+
+@app.route("/u/<username>")
+def send_page(username):
+    return send_from_directory(app.static_folder, "send.html")
+
+
+@app.route("/inbox")
+def inbox_page():
+    return send_from_directory(app.static_folder, "inbox.html")
+
+
+@app.route("/api/users", methods=["POST"])
+def create_user():
+    if not require_json():
+        return jsonify({"error": "Content-Type must be application/json."}), 415
+
+    if rate_limited(f"create:{client_ip()}", CREATE_LIMIT_PER_IP):
+        return jsonify({"error": "Too many accounts from this IP. Try again later."}), 429
+
+    data = request.get_json(silent=True) or {}
+    username = (data.get("username") or "").strip()
+    if not USERNAME_RE.match(username):
+        return jsonify({"error": "Username must be 3-20 chars (letters, numbers, underscore)."}), 400
+
+    db = get_db()
+    existing = db.table("users").select("username").eq("username", username).execute()
+    if existing.data:
+        return jsonify({"error": "That username is already taken."}), 409
+
+    admin_key = hashlib.sha256(os.urandom(32)).hexdigest()
+    db.table("users").insert(
+        {"username": username, "admin_key": admin_key}
+    ).execute()
+
+    link = f"{request.host_url.rstrip('/')}/u/{username}"
+    return jsonify({"username": username, "link": link, "adminKey": admin_key}), 201
+
+
+@app.route("/api/users/<username>", methods=["GET"])
+def check_user(username):
+    db = get_db()
+    res = db.table("users").select("username").eq("username", username).execute()
+    return (jsonify({"exists": True}), 200) if res.data else (jsonify({"exists": False}), 404)
+
+
+@app.route("/api/messages", methods=["POST"])
+def send_message():
+    if not require_json():
+        return jsonify({"error": "Content-Type must be application/json."}), 415
+
+    ip_hash = hashlib.sha256(client_ip().encode()).hexdigest()
+    if rate_limited(f"send:{ip_hash}", MESSAGE_LIMIT_PER_IP):
+        return jsonify({"error": "Slow down! You've sent enough messages for now."}), 429
+
+    data = request.get_json(silent=True) or {}
+    username = (data.get("username") or "").strip()
+    body = (data.get("body") or "").strip()
+
+    if not body or len(body) > MAX_BODY_LEN:
+        return jsonify({"error": "Message must be 1-500 characters."}), 400
+
+    db = get_db()
+    user = db.table("users").select("username").eq("username", username).execute()
+    if not user.data:
+        return jsonify({"error": "This link does not exist."}), 404
+
+    db.table("messages").insert(
+        {"username": username, "body": body, "ip_hash": ip_hash}
+    ).execute()
+    return jsonify({"ok": True}), 201
+
+
+@app.route("/api/messages", methods=["GET"])
+def get_messages():
+    key = request.headers.get("X-Admin-Key", "")
+    if not key:
+        return jsonify({"error": "Missing admin key."}), 401
+
+    ip_hash = hashlib.sha256(client_ip().encode()).hexdigest()
+    if rate_limited(f"inbox:{ip_hash}", INBOX_ATTEMPT_LIMIT_PER_IP):
+        return jsonify({"error": "Too many attempts. Try again later."}), 429
+
+    db = get_db()
+    user = db.table("users").select("username, admin_key").eq("admin_key", key).execute()
+    if not user.data:
+        return jsonify({"error": "Invalid key."}), 403
+
+    username = user.data[0]["username"]
+    res = db.table("messages").select("id, body, created_at").eq("username", username).order("created_at", desc=True).execute()
+    return jsonify({"username": username, "messages": res.data})
+
+
+@app.route("/api/messages/<message_id>", methods=["DELETE"])
+def delete_message(message_id):
+    key = request.headers.get("X-Admin-Key", "")
+    if not key:
+        return jsonify({"error": "Missing admin key."}), 401
+
+    db = get_db()
+    user = db.table("users").select("username, admin_key").eq("admin_key", key).execute()
+    if not user.data:
+        return jsonify({"error": "Invalid key."}), 403
+
+    username = user.data[0]["username"]
+    res = db.table("messages").select("username").eq("id", message_id).execute()
+    if not res.data or res.data[0]["username"] != username:
+        return jsonify({"error": "Message not found."}), 404
+
+    db.table("messages").delete().eq("id", message_id).execute()
+    return jsonify({"ok": True})
+
+
+@app.errorhandler(413)
+def too_large(err):
+    return jsonify({"error": "Request too large."}), 413
+
+
+@app.errorhandler(RuntimeError)
+def handle_runtime_error(err):
+    return jsonify({"error": str(err)}), 503
+
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False)
