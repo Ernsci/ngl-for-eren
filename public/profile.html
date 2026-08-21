@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>edit profile</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <main class="hero">
+    <div class="card profile-card">
+      <div class="avatar-preview">
+        <img id="avatar-preview" alt="">
+        <span class="avatar-placeholder" id="avatar-placeholder">?</span>
+      </div>
+      <h2 class="send-title">Your profile</h2>
+      <p class="tagline">Make it look like you.</p>
+
+      <form id="profile-form" class="create-form">
+        <label class="field-label" for="display-name">Display name</label>
+        <input id="display-name" type="text" maxlength="30" placeholder="your name" autocomplete="off">
+
+        <label class="field-label" for="avatar-url">Avatar image URL</label>
+        <input id="avatar-url" type="url" maxlength="500" placeholder="https://..." autocomplete="off">
+
+        <label class="field-label" for="bio">Bio</label>
+        <textarea id="bio" maxlength="160" placeholder="a sentence about you"></textarea>
+
+        <button type="submit" class="btn-gradient">Save profile</button>
+      </form>
+      <p id="profile-error" class="error hidden"></p>
+
+      <a class="btn-ghost link-btn" href="/inbox">Open my inbox</a>
+    </div>
+  </main>
+  <script src="/app.js"></script>
+</body>
+</html>

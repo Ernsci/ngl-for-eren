@@ -22,7 +22,7 @@ MESSAGE_LIMIT_PER_IP = 5
 CREATE_LIMIT_PER_IP = 10
 INBOX_ATTEMPT_LIMIT_PER_IP = 20
 
-app = Flask(__name__, static_folder="public")
+app = Flask(__name__, static_folder="public", static_url_path="")
 app.config["MAX_CONTENT_LENGTH"] = MAX_CONTENT_LENGTH
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
@@ -105,6 +105,11 @@ def inbox_page():
     return send_from_directory(app.static_folder, "inbox.html")
 
 
+@app.route("/profile")
+def profile_page():
+    return send_from_directory(app.static_folder, "profile.html")
+
+
 @app.route("/api/users", methods=["POST"])
 def create_user():
     if not require_json():
@@ -137,6 +142,68 @@ def check_user(username):
     db = get_db()
     res = db.table("users").select("username").eq("username", username).execute()
     return (jsonify({"exists": True}), 200) if res.data else (jsonify({"exists": False}), 404)
+
+
+@app.route("/api/profile/<username>", methods=["GET"])
+def get_profile(username):
+    db = get_db()
+    res = db.table("users").select("username, display_name, avatar_url, bio").eq("username", username).execute()
+    if not res.data:
+        return jsonify({"error": "This link does not exist."}), 404
+    row = res.data[0]
+    return jsonify({
+        "username": row.get("username"),
+        "displayName": row.get("display_name") or "",
+        "avatarUrl": row.get("avatar_url") or "",
+        "bio": row.get("bio") or "",
+    })
+
+
+@app.route("/api/me", methods=["GET"])
+def get_me():
+    key = request.headers.get("X-Admin-Key", "")
+    if not key:
+        return jsonify({"error": "Missing admin key."}), 401
+    db = get_db()
+    res = db.table("users").select("username, display_name, avatar_url, bio").eq("admin_key", key).execute()
+    if not res.data:
+        return jsonify({"error": "Invalid key."}), 403
+    row = res.data[0]
+    return jsonify({
+        "username": row.get("username"),
+        "displayName": row.get("display_name") or "",
+        "avatarUrl": row.get("avatar_url") or "",
+        "bio": row.get("bio") or "",
+    })
+
+
+@app.route("/api/profile", methods=["PUT"])
+def update_profile():
+    key = request.headers.get("X-Admin-Key", "")
+    if not key:
+        return jsonify({"error": "Missing admin key."}), 401
+    if not require_json():
+        return jsonify({"error": "Content-Type must be application/json."}), 415
+
+    db = get_db()
+    user = db.table("users").select("username, admin_key").eq("admin_key", key).execute()
+    if not user.data:
+        return jsonify({"error": "Invalid key."}), 403
+
+    data = request.get_json(silent=True) or {}
+    display_name = (data.get("displayName") or "").strip()[:30]
+    avatar_url = (data.get("avatarUrl") or "").strip()[:500]
+    bio = (data.get("bio") or "").strip()[:160]
+
+    if avatar_url and not re.match(r"^https?://", avatar_url):
+        return jsonify({"error": "Avatar must be a http(s) URL."}), 400
+
+    db.table("users").update({
+        "display_name": display_name or None,
+        "avatar_url": avatar_url or None,
+        "bio": bio or None,
+    }).eq("admin_key", key).execute()
+    return jsonify({"ok": True})
 
 
 @app.route("/api/messages", methods=["POST"])

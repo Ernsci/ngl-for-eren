@@ -18,6 +18,22 @@ async function api(url, options) {
   return data;
 }
 
+function setLetter(el, text) {
+  const letter = (text || "?").trim().charAt(0).toUpperCase() || "?";
+  el.textContent = letter;
+}
+
+function showAvatar(img, letterEl, letter) {
+  img.addEventListener("error", () => {
+    img.style.display = "none";
+    letterEl.style.display = "block";
+  });
+  img.src = img.dataset.src;
+  img.style.display = "block";
+  letterEl.style.display = "none";
+  setLetter(letterEl, letter);
+}
+
 /* ---------- landing: create link ---------- */
 const createForm = $("#create-form");
 if (createForm) {
@@ -70,10 +86,22 @@ if (sendForm) {
 
   (async () => {
     try {
-      await api(`/api/users/${encodeURIComponent(username)}`);
+      const profile = await api(`/api/profile/${encodeURIComponent(username)}`);
+      const name = profile.displayName || profile.username;
+      $("#profile-name").textContent = name;
+      $("#profile-bio").textContent = profile.bio || "";
+      if (profile.avatarUrl) {
+        const img = $("#avatar");
+        img.dataset.src = profile.avatarUrl;
+        showAvatar(img, $("#avatar-letter"), name);
+      } else {
+        setLetter($("#avatar-letter"), name);
+      }
     } catch (e) {
       $("#send-form").remove();
-      $("#sent").classList.remove("hidden");
+      $(".profile-header").remove();
+      $(".prompt").remove();
+      sent.classList.remove("hidden");
       $("#sent p").textContent = "This link doesn't exist.";
     }
   })();
@@ -95,7 +123,7 @@ if (sendForm) {
       });
       hide(btn);
       hide($("#message"));
-      hide($(".tagline"));
+      hide($(".prompt"));
       show(typing);
       setTimeout(() => {
         hide(typing);
@@ -122,6 +150,7 @@ if (inboxForm) {
     });
     messagesEl.innerHTML = "";
     show(messagesEl);
+    show($("#inbox-links"));
     if (!data.messages.length) {
       messagesEl.innerHTML = '<p class="empty">No messages yet.</p>';
       return;
@@ -174,6 +203,81 @@ if (inboxForm) {
     } finally {
       btn.disabled = false;
       btn.textContent = "View messages";
+    }
+  });
+}
+
+/* ---------- profile edit page ---------- */
+const profileForm = $("#profile-form");
+if (profileForm) {
+  const errorEl = $("#profile-error");
+  const avatarImg = $("#avatar-preview");
+  const avatarPlaceholder = $("#avatar-placeholder");
+  const key = sessionStorage.getItem("adminKey");
+
+  function updatePreview(url) {
+    if (url && url.startsWith("http")) {
+      avatarImg.dataset.src = url;
+      showAvatar(avatarImg, avatarPlaceholder, $("#display-name").value || "?");
+    } else {
+      avatarImg.style.display = "none";
+      avatarPlaceholder.style.display = "block";
+      setLetter(avatarPlaceholder, $("#display-name").value);
+    }
+  }
+
+  $("#avatar-url").addEventListener("input", (e) => updatePreview(e.target.value));
+  $("#display-name").addEventListener("input", () => {
+    if (!avatarImg.style.display || avatarImg.style.display === "none") {
+      setLetter(avatarPlaceholder, $("#display-name").value);
+    }
+  });
+
+  (async () => {
+    if (!key) {
+      errorEl.textContent = "No admin key found. Create your link first.";
+      show(errorEl);
+      return;
+    }
+    try {
+      const me = await api("/api/me", { headers: { "X-Admin-Key": key } });
+      $("#display-name").value = me.displayName || "";
+      $("#avatar-url").value = me.avatarUrl || "";
+      $("#bio").value = me.bio || "";
+      setLetter(avatarPlaceholder, me.displayName || me.username);
+      updatePreview(me.avatarUrl);
+    } catch (err) {
+      errorEl.textContent = err.message;
+      show(errorEl);
+    }
+  })();
+
+  profileForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    hide(errorEl);
+    const btn = profileForm.querySelector("button");
+    btn.disabled = true;
+    btn.textContent = "Saving...";
+    try {
+      await api("/api/profile", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Admin-Key": key,
+        },
+        body: JSON.stringify({
+          displayName: $("#display-name").value,
+          avatarUrl: $("#avatar-url").value,
+          bio: $("#bio").value,
+        }),
+      });
+      btn.textContent = "Saved!";
+      setTimeout(() => (btn.textContent = "Save profile"), 1500);
+    } catch (err) {
+      errorEl.textContent = err.message;
+      show(errorEl);
+    } finally {
+      btn.disabled = false;
     }
   });
 }

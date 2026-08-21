@@ -9,8 +9,18 @@
 <body>
   <main class="hero">
     <div class="card send-card">
-      <h2 class="send-title">Send me a message</h2>
-      <p class="tagline">It's anonymous — say whatever you want.</p>
+      <div class="profile-header">
+        <div class="avatar">
+          <img id="avatar" alt="">
+          <span class="avatar-letter" id="avatar-letter">?</span>
+        </div>
+        <div class="profile-text">
+          <h2 id="profile-name">someone</h2>
+          <p id="profile-bio" class="bio"></p>
+        </div>
+      </div>
+
+      <p class="prompt">Send me a message</p>
 
       <form id="send-form" class="create-form">
         <textarea id="message" placeholder="type your message..." maxlength="500" required></textarea>

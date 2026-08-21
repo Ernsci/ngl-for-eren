@@ -1,7 +1,3 @@
--- Run this in the Supabase SQL editor.
--- RLS is intentionally disabled: this app is server-side only and
--- authenticates via the service_role key.
-
 create table if not exists public.users (
   id uuid primary key default gen_random_uuid(),
   username text unique not null,
@@ -18,3 +14,7 @@ create table if not exists public.messages (
 );
 
 create index if not exists idx_messages_username on public.messages (username);
+
+alter table public.users add column if not exists display_name text;
+alter table public.users add column if not exists avatar_url text;
+alter table public.users add column if not exists bio text;
