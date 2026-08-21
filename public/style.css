@@ -5,12 +5,12 @@
 }
 
 :root {
-  --bg: #faf9ff;
-  --surface: #ffffff;
-  --surface-2: #f4f2fa;
-  --border: #ece9f4;
-  --text: #1a1a2e;
-  --muted: #8a86a0;
+  --bg: #0c0c14;
+  --surface: #15151f;
+  --surface-2: #1d1d29;
+  --border: #262635;
+  --text: #f2f2f7;
+  --muted: #9b98ad;
   --pink: #ff2d95;
   --purple: #7b2ff7;
   --blue: #4f8bff;
@@ -18,8 +18,8 @@
   --radius: 20px;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --shadow: 0 10px 40px rgba(90, 60, 160, 0.1);
-  --shadow-lg: 0 20px 60px rgba(90, 60, 160, 0.18);
+  --shadow: 0 10px 40px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.6);
 }
 
 html,
@@ -47,7 +47,7 @@ body {
   gap: 4px;
   height: calc(56px + var(--safe-top));
   padding: var(--safe-top) 12px 0;
-  background: rgba(250, 249, 255, 0.92);
+  background: rgba(12, 12, 20, 0.92);
   border-bottom: 1px solid var(--border);
 }
 
@@ -193,14 +193,14 @@ body {
 
 .field input::placeholder,
 .field textarea::placeholder {
-  color: #b4b0c4;
+  color: #57576a;
 }
 
 .field input:focus,
 .field textarea:focus {
   border-color: var(--purple);
-  background: #fff;
-  box-shadow: 0 0 0 4px rgba(123, 47, 247, 0.14);
+  background: var(--surface);
+  box-shadow: 0 0 0 4px rgba(123, 47, 247, 0.2);
 }
 
 /* ---------- buttons ---------- */
@@ -251,7 +251,7 @@ body {
 
 .btn-ghost:hover,
 .btn-secondary:hover {
-  background: #ece9f4;
+  background: #232330;
 }
 
 .link-btn {
@@ -259,7 +259,7 @@ body {
 }
 
 .link-btn:hover {
-  background: #ece9f4;
+  background: #232330;
 }
 
 .error {
@@ -546,9 +546,9 @@ body {
 }
 
 .msg-unread {
-  background: #fff;
-  border-color: rgba(123, 47, 247, 0.35);
-  box-shadow: 0 4px 16px rgba(123, 47, 247, 0.1);
+  background: #1a1a26;
+  border-color: rgba(123, 47, 247, 0.45);
+  box-shadow: 0 4px 16px rgba(123, 47, 247, 0.15);
 }
 
 .empty {
@@ -590,45 +590,4 @@ body {
   color: var(--purple);
   font-weight: 700;
   text-decoration: none;
-}
-
-/* ---------- update modal ---------- */
-.update-modal {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  background: rgba(26, 26, 46, 0.55);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
-
-.update-card {
-  width: 100%;
-  max-width: 340px;
-  background: var(--surface);
-  border-radius: 24px;
-  padding: 28px 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  box-shadow: var(--shadow-lg);
-  text-align: center;
-}
-
-.update-title {
-  font-size: 1.3rem;
-  background: var(--gradient);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-.update-text {
-  color: var(--muted);
-  font-size: 0.95rem;
-  line-height: 1.5;
 }
