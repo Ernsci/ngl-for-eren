@@ -39,25 +39,26 @@ body::after {
   content: "";
   position: fixed;
   border-radius: 50%;
-  filter: blur(120px);
+  filter: blur(60px);
   z-index: 0;
   pointer-events: none;
+  will-change: auto;
 }
 
 body::before {
-  width: 480px;
-  height: 480px;
-  top: -160px;
-  left: -120px;
-  background: radial-gradient(circle, rgba(255, 45, 149, 0.3), transparent 70%);
+  width: 360px;
+  height: 360px;
+  top: -120px;
+  left: -100px;
+  background: radial-gradient(circle, rgba(255, 45, 149, 0.22), transparent 70%);
 }
 
 body::after {
-  width: 520px;
-  height: 520px;
-  bottom: -180px;
-  right: -140px;
-  background: radial-gradient(circle, rgba(123, 47, 247, 0.38), transparent 70%);
+  width: 380px;
+  height: 380px;
+  bottom: -140px;
+  right: -110px;
+  background: radial-gradient(circle, rgba(123, 47, 247, 0.26), transparent 70%);
 }
 
 /* ---------- app bar ---------- */
@@ -70,9 +71,7 @@ body::after {
   gap: 4px;
   height: calc(56px + var(--safe-top));
   padding: var(--safe-top) 12px 0;
-  background: rgba(7, 7, 13, 0.78);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: rgba(7, 7, 13, 0.92);
   border-bottom: 1px solid var(--border);
 }
 
@@ -178,7 +177,7 @@ body::after {
   border: 1px solid var(--border);
   border-radius: 24px;
   padding: 24px 20px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
 }
 
 /* ---------- forms ---------- */
@@ -257,12 +256,12 @@ body::after {
 .btn-gradient,
 .btn-primary {
   background: var(--gradient);
-  box-shadow: 0 10px 28px rgba(123, 47, 247, 0.32);
+  box-shadow: 0 8px 20px rgba(123, 47, 247, 0.28);
 }
 
 .btn-gradient:hover,
 .btn-primary:hover {
-  box-shadow: 0 12px 34px rgba(255, 45, 149, 0.35);
+  box-shadow: 0 10px 26px rgba(255, 45, 149, 0.3);
 }
 
 .btn-ghost,
@@ -279,6 +278,10 @@ body::after {
 
 .link-btn {
   margin-top: 12px;
+}
+
+.link-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .error {
