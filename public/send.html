@@ -2,12 +2,21 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#07070d">
   <title>send me a message</title>
-  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main class="hero">
+  <header class="app-bar">
+    <button class="back-btn" id="back-btn" type="button" aria-label="Back">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <span class="app-bar-title">Send a message</span>
+    <span class="app-bar-spacer"></span>
+  </header>
+
+  <main class="page">
     <div class="card send-card">
       <div class="profile-header">
         <div class="avatar">
@@ -22,11 +31,13 @@
 
       <p class="prompt">Send me a message</p>
 
-      <form id="send-form" class="create-form">
-        <textarea id="message" placeholder="type your message..." maxlength="500" required></textarea>
-        <button type="submit" class="btn-gradient">Send</button>
+      <form id="send-form">
+        <div class="field">
+          <textarea id="message" placeholder="type your message..." maxlength="500" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-gradient">Send</button>
+        <p id="send-error" class="error hidden"></p>
       </form>
-      <p id="send-error" class="error hidden"></p>
 
       <div id="typing" class="typing hidden">
         <span></span><span></span><span></span>
@@ -37,7 +48,8 @@
       </div>
     </div>
   </main>
-  <script src="/config.js"></script>
-  <script src="/app.js"></script>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>

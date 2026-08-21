@@ -2,31 +2,39 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#07070d">
   <title>confess — get anonymous messages</title>
-  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main class="hero">
+  <header class="app-bar">
+    <div class="brand">confess<span>.</span></div>
+  </header>
+
+  <main class="page">
+    <section class="hero-section">
+      <h1 class="hero-logo">confess<span>.</span></h1>
+      <p class="hero-tagline">Get anonymous messages &amp; confessions. Create a free account.</p>
+    </section>
+
     <div class="card">
-      <h1 class="logo">confess<span>.</span></h1>
-      <p class="tagline">Get anonymous messages & confessions. Create a free account.</p>
-
-      <form id="create-form" class="create-form">
-        <label class="field-label" for="username">Username</label>
-        <input id="username" name="username" type="text" placeholder="your username" autocomplete="username" maxlength="20" required>
-
-        <label class="field-label" for="email">Email</label>
-        <input id="email" name="email" type="email" placeholder="you@example.com" autocomplete="email" required>
-
-        <label class="field-label" for="password">Password</label>
-        <input id="password" name="password" type="password" placeholder="min 8 characters" autocomplete="new-password" minlength="8" required>
-
-        <button type="submit" class="btn-gradient">Create my account</button>
+      <form id="create-form">
+        <div class="field">
+          <label class="field-label" for="username">Username</label>
+          <input id="username" name="username" type="text" placeholder="your username" autocomplete="username" maxlength="20" required>
+        </div>
+        <div class="field">
+          <label class="field-label" for="email">Email</label>
+          <input id="email" name="email" type="email" placeholder="you@example.com" autocomplete="email" required>
+        </div>
+        <div class="field">
+          <label class="field-label" for="password">Password</label>
+          <input id="password" name="password" type="password" placeholder="min 8 characters" autocomplete="new-password" minlength="8" required>
+        </div>
+        <button type="submit" class="btn btn-gradient">Create my account</button>
+        <p id="create-error" class="error hidden"></p>
       </form>
-      <p id="create-error" class="error hidden"></p>
-
-      <p class="switch-link">Already have an account? <a href="/login">Log in</a></p>
 
       <div id="result" class="result hidden">
         <p>Share this link. Anyone can send you a message:</p>
@@ -34,19 +42,16 @@
           <input id="link" readonly>
           <button id="copy-btn" class="btn-ghost" type="button">Copy</button>
         </div>
-        <div class="link-row">
-          <a id="open-inbox" href="/inbox" class="btn-gradient">Open my inbox</a>
-        </div>
-        <div class="link-row">
-          <a id="open-profile" href="/profile" class="btn-ghost">Edit my profile</a>
-        </div>
-        <div class="link-row">
-          <a id="open-page" href="#" class="btn-ghost">View my page</a>
-        </div>
+        <a id="open-inbox" href="inbox.html" class="btn btn-gradient">Open my inbox</a>
+        <a id="open-profile" href="profile.html" class="btn btn-ghost">Edit my profile</a>
+        <a id="open-page" href="#" class="btn btn-ghost">View my page</a>
       </div>
+
+      <p class="switch-link">Already have an account? <a href="login.html">Log in</a></p>
     </div>
   </main>
-  <script src="/config.js"></script>
-  <script src="/app.js"></script>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>

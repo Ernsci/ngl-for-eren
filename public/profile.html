@@ -2,12 +2,21 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#07070d">
   <title>edit profile</title>
-  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main class="hero">
+  <header class="app-bar">
+    <a class="back-btn" href="inbox.html" aria-label="Back">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </a>
+    <span class="app-bar-title">Edit profile</span>
+    <span class="app-bar-spacer"></span>
+  </header>
+
+  <main class="page">
     <div class="card profile-card">
       <div class="avatar-preview">
         <img id="avatar-preview" alt="">
@@ -18,24 +27,28 @@
 
       <p class="account-email" id="account-email"></p>
 
-      <form id="profile-form" class="create-form">
-        <label class="field-label" for="display-name">Display name</label>
-        <input id="display-name" type="text" maxlength="30" placeholder="your name" autocomplete="off">
-
-        <label class="field-label" for="avatar-url">Avatar image URL</label>
-        <input id="avatar-url" type="url" maxlength="500" placeholder="https://..." autocomplete="off">
-
-        <label class="field-label" for="bio">Bio</label>
-        <textarea id="bio" maxlength="160" placeholder="a sentence about you"></textarea>
-
-        <button type="submit" class="btn-gradient">Save profile</button>
+      <form id="profile-form">
+        <div class="field">
+          <label class="field-label" for="display-name">Display name</label>
+          <input id="display-name" type="text" maxlength="30" placeholder="your name" autocomplete="off">
+        </div>
+        <div class="field">
+          <label class="field-label" for="avatar-url">Avatar image URL</label>
+          <input id="avatar-url" type="url" maxlength="500" placeholder="https://..." autocomplete="off">
+        </div>
+        <div class="field">
+          <label class="field-label" for="bio">Bio</label>
+          <textarea id="bio" maxlength="160" placeholder="a sentence about you"></textarea>
+        </div>
+        <button type="submit" class="btn btn-gradient">Save profile</button>
+        <p id="profile-error" class="error hidden"></p>
       </form>
-      <p id="profile-error" class="error hidden"></p>
 
-      <a class="btn-ghost link-btn" href="/inbox">Open my inbox</a>
+      <a class="btn btn-ghost link-btn" href="inbox.html">Open my inbox</a>
     </div>
   </main>
-  <script src="/config.js"></script>
-  <script src="/app.js"></script>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>

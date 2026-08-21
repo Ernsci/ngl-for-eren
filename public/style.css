@@ -5,26 +5,33 @@
 }
 
 :root {
+  --bg: #07070d;
+  --surface: #12121c;
+  --border: rgba(255, 255, 255, 0.08);
+  --text: #f5f5f7;
+  --muted: #9d9dab;
   --pink: #ff2d95;
   --purple: #7b2ff7;
   --blue: #2f6bff;
-  --text: #f5f5f7;
-  --muted: #b0b0bb;
-  --card: rgba(255, 255, 255, 0.06);
-  --border: rgba(255, 255, 255, 0.12);
+  --gradient: linear-gradient(90deg, var(--pink), var(--purple), var(--blue));
+  --radius: 16px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+html,
+body {
+  height: 100%;
 }
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background: #07070d;
+  background: var(--bg);
   color: var(--text);
   min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  position: relative;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body::before,
@@ -42,7 +49,7 @@ body::before {
   height: 480px;
   top: -160px;
   left: -120px;
-  background: radial-gradient(circle, rgba(255, 45, 149, 0.5), transparent 70%);
+  background: radial-gradient(circle, rgba(255, 45, 149, 0.3), transparent 70%);
 }
 
 body::after {
@@ -50,160 +57,253 @@ body::after {
   height: 520px;
   bottom: -180px;
   right: -140px;
-  background: radial-gradient(circle, rgba(123, 47, 247, 0.55), transparent 70%);
+  background: radial-gradient(circle, rgba(123, 47, 247, 0.38), transparent 70%);
 }
 
-.hero {
-  width: 100%;
+/* ---------- app bar ---------- */
+.app-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
   display: flex;
+  align-items: center;
+  gap: 4px;
+  height: calc(56px + var(--safe-top));
+  padding: var(--safe-top) 12px 0;
+  background: rgba(7, 7, 13, 0.78);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+
+.back-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
   justify-content: center;
-  position: relative;
-  z-index: 1;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s, transform 0.1s;
+  text-decoration: none;
 }
 
-.card {
-  width: 100%;
-  max-width: 420px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
-  border: 1px solid var(--border);
-  border-radius: 28px;
-  padding: 32px 28px;
-  backdrop-filter: blur(16px);
-  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+.back-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
 }
 
-.logo {
-  font-size: 2rem;
+.back-btn:active {
+  transform: scale(0.9);
+}
+
+.back-btn svg {
+  width: 22px;
+  height: 22px;
+}
+
+.app-bar-title {
+  flex: 1;
+  text-align: center;
+  font-size: 1.02rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.app-bar-spacer {
+  width: 40px;
+  flex-shrink: 0;
+}
+
+.app-bar .brand {
+  flex: 1;
+  text-align: center;
+  font-size: 1.15rem;
   font-weight: 800;
-  letter-spacing: -0.5px;
-  margin-bottom: 6px;
+  letter-spacing: -0.3px;
 }
 
-.logo span {
-  background: linear-gradient(90deg, var(--pink), var(--purple), var(--blue));
+.app-bar .brand span {
+  background: var(--gradient);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
-.tagline {
-  color: var(--muted);
-  margin-bottom: 22px;
-  font-size: 0.95rem;
-}
-
-.create-form {
+/* ---------- layout ---------- */
+.page {
+  position: relative;
+  z-index: 1;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 20px 20px calc(40px + var(--safe-bottom));
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
 
-.create-form input,
-.create-form textarea {
+.hero-section {
+  text-align: center;
+  padding: 24px 0 12px;
+}
+
+.hero-logo {
+  font-size: 2.5rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.hero-logo span {
+  background: var(--gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.hero-tagline {
+  color: var(--muted);
+  margin-top: 10px;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+/* ---------- card ---------- */
+.card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 24px 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* ---------- forms ---------- */
+.field {
+  margin-bottom: 16px;
+}
+
+.field-label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: 8px;
+}
+
+.field input,
+.field textarea {
   width: 100%;
-  background: rgba(0, 0, 0, 0.4);
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 14px;
   color: var(--text);
   padding: 14px 16px;
   font-size: 1rem;
   outline: none;
+  font-family: inherit;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.create-form textarea {
+.field textarea {
   min-height: 110px;
   resize: none;
-  font-family: inherit;
 }
 
-.create-form input:focus,
-.create-form textarea:focus {
+.field input::placeholder,
+.field textarea::placeholder {
+  color: #5b5b6b;
+}
+
+.field input:focus,
+.field textarea:focus {
   border-color: var(--purple);
-  box-shadow: 0 0 0 3px rgba(123, 47, 247, 0.25);
+  box-shadow: 0 0 0 4px rgba(123, 47, 247, 0.18);
 }
 
-.field-label {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  margin-top: 4px;
-}
-
-.btn-gradient {
+/* ---------- buttons ---------- */
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 52px;
   border: none;
   border-radius: 14px;
-  padding: 14px 16px;
   font-size: 1rem;
   font-weight: 700;
-  color: #fff;
   cursor: pointer;
-  background: linear-gradient(90deg, var(--pink), var(--purple), var(--blue));
-  background-size: 200% 100%;
-  transition: background-position 0.3s, transform 0.1s, opacity 0.2s, box-shadow 0.2s;
-  text-align: center;
   text-decoration: none;
-  box-shadow: 0 8px 24px rgba(123, 47, 247, 0.35);
+  color: #fff;
+  font-family: inherit;
+  transition: transform 0.1s, box-shadow 0.2s, background 0.2s, opacity 0.2s;
 }
 
-.btn-gradient:hover {
-  background-position: 100% 0;
-  box-shadow: 0 10px 30px rgba(255, 45, 149, 0.35);
-}
-
-.btn-gradient:active {
+.btn:active {
   transform: scale(0.98);
 }
 
-.btn-gradient:disabled {
-  opacity: 0.6;
+.btn:disabled {
+  opacity: 0.55;
   cursor: default;
 }
 
-.btn-ghost {
-  border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--text);
-  border-radius: 12px;
-  padding: 12px 16px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: background 0.2s;
-  text-align: center;
-  text-decoration: none;
+.btn-gradient,
+.btn-primary {
+  background: var(--gradient);
+  box-shadow: 0 10px 28px rgba(123, 47, 247, 0.32);
 }
 
-.btn-ghost:hover {
+.btn-gradient:hover,
+.btn-primary:hover {
+  box-shadow: 0 12px 34px rgba(255, 45, 149, 0.35);
+}
+
+.btn-ghost,
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+.btn-ghost:hover,
+.btn-secondary:hover {
   background: rgba(255, 255, 255, 0.12);
 }
 
 .link-btn {
-  display: block;
-  margin-top: 16px;
+  margin-top: 12px;
 }
 
 .error {
   color: #ff6b6b;
   margin-top: 12px;
   font-size: 0.9rem;
+  line-height: 1.4;
 }
 
 .hidden {
   display: none !important;
 }
 
+/* ---------- result / share ---------- */
 .result {
-  margin-top: 20px;
+  margin-top: 4px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .result p {
   color: var(--muted);
   font-size: 0.9rem;
+  line-height: 1.5;
 }
 
 .link-row {
@@ -214,7 +314,7 @@ body::after {
 .link-row input {
   flex: 1;
   min-width: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
   color: var(--text);
@@ -222,7 +322,14 @@ body::after {
   font-size: 0.85rem;
 }
 
-/* send page: profile header */
+.link-row .btn-ghost {
+  width: auto;
+  height: 40px;
+  padding: 0 14px;
+  font-size: 0.85rem;
+}
+
+/* ---------- send page: profile header ---------- */
 .profile-header {
   display: flex;
   align-items: center;
@@ -232,12 +339,12 @@ body::after {
 
 .avatar {
   position: relative;
-  width: 64px;
-  height: 64px;
+  width: 60px;
+  height: 60px;
   flex-shrink: 0;
   border-radius: 50%;
   padding: 3px;
-  background: linear-gradient(135deg, var(--pink), var(--purple), var(--blue));
+  background: var(--gradient);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -252,14 +359,19 @@ body::after {
 }
 
 .avatar-letter {
-  font-size: 1.6rem;
+  font-size: 1.5rem;
   font-weight: 800;
   color: #fff;
 }
 
+.profile-text {
+  min-width: 0;
+}
+
 .profile-text h2 {
-  font-size: 1.3rem;
+  font-size: 1.25rem;
   margin-bottom: 2px;
+  word-break: break-word;
 }
 
 .profile-text .bio {
@@ -269,29 +381,36 @@ body::after {
 }
 
 .prompt {
-  font-size: 1rem;
+  font-size: 1.02rem;
   font-weight: 700;
-  margin-bottom: 12px;
-  background: linear-gradient(90deg, var(--pink), var(--purple), var(--blue));
+  margin-bottom: 14px;
+  background: var(--gradient);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
 .send-title {
-  font-size: 1.4rem;
+  font-size: 1.3rem;
+  font-weight: 700;
   margin-bottom: 6px;
 }
 
-/* profile edit page: avatar preview */
+.tagline {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin-bottom: 16px;
+}
+
+/* ---------- profile page: avatar preview ---------- */
 .avatar-preview {
   position: relative;
   width: 88px;
   height: 88px;
-  margin: 0 auto 18px;
+  margin: 0 auto 20px;
   border-radius: 50%;
   padding: 4px;
-  background: linear-gradient(135deg, var(--pink), var(--purple), var(--blue));
+  background: var(--gradient);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -306,12 +425,19 @@ body::after {
 }
 
 .avatar-placeholder {
-  font-size: 2.2rem;
+  font-size: 2.1rem;
   font-weight: 800;
   color: #fff;
 }
 
-/* typing dots */
+.account-email {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin-bottom: 14px;
+  text-align: center;
+}
+
+/* ---------- typing dots ---------- */
 .typing {
   display: flex;
   gap: 6px;
@@ -323,7 +449,7 @@ body::after {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: linear-gradient(90deg, var(--pink), var(--purple), var(--blue));
+  background: var(--gradient);
   animation: bounce 1.2s infinite ease-in-out;
 }
 
@@ -340,7 +466,7 @@ body::after {
   30% { transform: translateY(-12px); opacity: 1; }
 }
 
-/* sent check */
+/* ---------- sent check ---------- */
 .sent {
   margin-top: 24px;
   display: flex;
@@ -372,9 +498,26 @@ body::after {
   to { transform: scale(1); }
 }
 
-/* inbox messages */
+/* ---------- inbox ---------- */
+.inbox-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.unread-badge {
+  background: var(--gradient);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 4px 12px;
+  box-shadow: 0 4px 16px rgba(255, 45, 149, 0.4);
+}
+
 .messages {
-  margin-top: 20px;
+  margin-top: 16px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -383,9 +526,9 @@ body::after {
 }
 
 .msg {
-  background: rgba(0, 0, 0, 0.4);
+  background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: 16px;
   padding: 14px 16px;
   transition: border-color 0.2s;
 }
@@ -393,6 +536,7 @@ body::after {
 .msg p {
   word-break: break-word;
   white-space: pre-wrap;
+  line-height: 1.5;
 }
 
 .msg time {
@@ -404,7 +548,7 @@ body::after {
 
 .msg .del {
   margin-top: 10px;
-  border: 1px solid rgba(255, 107, 107, 0.4);
+  border: 1px solid rgba(255, 107, 107, 0.35);
   background: transparent;
   color: #ff6b6b;
   border-radius: 10px;
@@ -412,10 +556,16 @@ body::after {
   cursor: pointer;
   font-size: 0.8rem;
   font-weight: 600;
+  font-family: inherit;
 }
 
 .msg .del:hover {
-  background: rgba(255, 107, 107, 0.12);
+  background: rgba(255, 107, 107, 0.1);
+}
+
+.msg-unread {
+  border-color: rgba(255, 45, 149, 0.5);
+  box-shadow: 0 0 0 1px rgba(255, 45, 149, 0.2), 0 8px 24px rgba(255, 45, 149, 0.12);
 }
 
 .empty {
@@ -426,51 +576,6 @@ body::after {
 
 .inbox-links {
   margin-top: 16px;
-}
-
-/* auth */
-.switch-link {
-  margin-top: 16px;
-  text-align: center;
-  color: var(--muted);
-  font-size: 0.9rem;
-}
-
-.switch-link a {
-  color: #fff;
-  font-weight: 600;
-  text-decoration: none;
-  background: linear-gradient(90deg, var(--pink), var(--purple));
-  -webkit-background-clip: text;
-  background-clip: text;
-}
-
-.account-email {
-  color: var(--muted);
-  font-size: 0.85rem;
-  margin-bottom: 16px;
-  text-align: center;
-}
-
-.inbox-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.unread-badge {
-  background: linear-gradient(135deg, var(--pink), var(--purple));
-  color: #fff;
-  font-size: 0.8rem;
-  font-weight: 700;
-  border-radius: 999px;
-  padding: 4px 12px;
-  box-shadow: 0 4px 16px rgba(255, 45, 149, 0.4);
-}
-
-.msg-unread {
-  border-color: rgba(255, 45, 149, 0.55);
-  box-shadow: 0 0 0 1px rgba(255, 45, 149, 0.25), 0 6px 20px rgba(255, 45, 149, 0.15);
 }
 
 .notification-banner {
@@ -490,7 +595,24 @@ body::after {
   font-weight: 600;
 }
 
-/* update modal */
+/* ---------- auth ---------- */
+.switch-link {
+  margin-top: 16px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.switch-link a {
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+  background: var(--gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+/* ---------- update modal ---------- */
 .update-modal {
   position: fixed;
   inset: 0;
@@ -518,7 +640,7 @@ body::after {
 
 .update-title {
   font-size: 1.3rem;
-  background: linear-gradient(90deg, var(--pink), var(--purple), var(--blue));
+  background: var(--gradient);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;

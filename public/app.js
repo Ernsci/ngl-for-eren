@@ -2,6 +2,19 @@ const $ = (sel) => document.querySelector(sel);
 
 const API_BASE = (window.API_BASE || "").replace(/\/+$/, "");
 
+/* ---------- back button ---------- */
+const backBtn = $("#back-btn");
+if (backBtn) {
+  backBtn.addEventListener("click", () => {
+    const fallback = backBtn.dataset.fallback || "index.html";
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      window.location.href = fallback;
+    }
+  });
+}
+
 function show(el) {
   el.classList.remove("hidden");
 }
@@ -102,7 +115,7 @@ if (loginForm) {
         body: JSON.stringify({ email, password }),
       });
       sessionStorage.setItem("adminKey", data.adminKey);
-      window.location.href = "/inbox";
+      window.location.href = "inbox.html";
     } catch (err) {
       errorEl.textContent = err.message;
       show(errorEl);

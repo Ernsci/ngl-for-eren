@@ -83,7 +83,7 @@ def add_security_headers(resp):
         "default-src 'self'; "
         "script-src 'self'; "
         "style-src 'self'; "
-        "img-src 'self' data:; "
+        "img-src 'self' data: https:; "
         "font-src 'self'; "
         "connect-src 'self'; "
         "base-uri 'self'; "
