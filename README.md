@@ -88,3 +88,16 @@ npx cap open android   # build in Android Studio
 - Rate limiting is stored in memory, so it resets on restart — fine for a demo.
 - Usernames are 3–20 characters (letters, numbers, underscore).
 - Profile fields: display name (max 30), avatar URL (http/https, max 500), bio (max 160).
+
+## In-app update check
+
+The Android app checks `/api/update` on launch. To enable update prompts, set these
+environment variables on Render (or in `.env` locally):
+
+- `LATEST_APP_VERSION` — the newest app version (e.g. `1.0.1`)
+- `APK_DOWNLOAD_URL` — a direct link to the new APK
+
+When the installed version (`window.APP_VERSION`, from `package.json`) differs from
+`LATEST_APP_VERSION`, the app shows "Update now". Tapping it opens the APK URL and then
+prompts the user to restart the app. Bump `package.json`'s `version` before each release —
+`scripts/set-api.js` embeds it into the build.

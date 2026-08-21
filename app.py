@@ -355,6 +355,19 @@ def get_notifications():
     return jsonify({"unread": len(unread_res.data)})
 
 
+@app.route("/api/update", methods=["GET"])
+def update_info():
+    latest_version = os.environ.get("LATEST_APP_VERSION", "").strip()
+    apk_url = os.environ.get("APK_DOWNLOAD_URL", "").strip()
+    if not latest_version:
+        return jsonify({"update": False})
+    return jsonify({
+        "update": True,
+        "latestVersion": latest_version,
+        "apkUrl": apk_url,
+    })
+
+
 @app.route("/api/messages/<message_id>", methods=["DELETE"])
 def delete_message(message_id):
     key = request.headers.get("X-Admin-Key", "")

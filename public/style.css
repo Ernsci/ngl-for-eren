@@ -489,3 +489,43 @@ body::after {
   font-size: 0.9rem;
   font-weight: 600;
 }
+
+/* update modal */
+.update-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.update-card {
+  width: 100%;
+  max-width: 340px;
+  background: linear-gradient(180deg, #1a1230, #12121c);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.6);
+}
+
+.update-title {
+  font-size: 1.3rem;
+  background: linear-gradient(90deg, var(--pink), var(--purple), var(--blue));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.update-text {
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
